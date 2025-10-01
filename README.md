@@ -8,20 +8,20 @@ a framework with three key components:
 3. **Calibration**
 
 For comparison, Neural Posterior Estimation (NPE) and Neural Likelihood Estimation (NLE) can be reproduced.
-1. ** NPE and NLE training **
-2. ** NPE and NLE inference **
+1. **NPE and NLE training**
+2. **NPE and NLE inference**
    
 ---
 
 ## 📂 Repository Structure
 ### NABC
-- `benchmark/benchmark_training.py` → trains the conditional mean function (**Sec 3.1**)  
-- `benchmark/benchmark_cov_training.py` → trains the conditional variance function (**Sec 3.2**)  
-- `benchmark/benchmark_calibrating.py` → performs calibration (**Sec 3.3**)  
+- `benchmark/benchmark_training.py` trains the conditional mean function (**Sec 3.1**) and provides trained network and training time.  
+- `benchmark/benchmark_cov_training.py` trains the conditional variance function (**Sec 3.2**) and provides trained network and training time.  
+- `benchmark/benchmark_calibrating.py` performs calibration (**Sec 3.3**) and provides C2ST and elapsed time for calibration.
 
 ### NPE and NLE
-- `NPLE/NPE_training.py' → trains NPE and NLE method
-- `NPLE/NPE_inference.py' → performs NPE and NLE inference 
+- `NPLE/NPE_training.py` trains NPE and NLE method and saves trained network and training time
+- `NPLE/NPE_inference.py` performs NPE and NLE inference and provides C2ST and elapsed time for inference. 
 ---
 
 ## 🚀 NABC Usage
