@@ -8,7 +8,7 @@ import os
 import argparse
 import time
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
-from NABC.simulator import Simulators, Priors
+from benchmark.simulator import Simulators, Priors
 
 
 def main(args):
