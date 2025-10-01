@@ -10,12 +10,11 @@ from pathlib import Path
 from sbi.analysis import pairplot
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
-from NDP import calibrate_cov
-from NDP_functions import ABC_rej2
+from NABC import calibrate_cov
+from NABC_functions import ABC_rej2,SLCP_summary
 from module import FL_Net, CovarianceNet, FL_Net_bounded
 from benchmark.simul_funcs import truncated_mvn_sample
 from simulator import Priors, Simulators, Bounds
-from NDP_functions import SLCP_summary
 from simul_funcs import UnifSample, param_box
 
 def main(args):

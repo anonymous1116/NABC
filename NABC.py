@@ -8,7 +8,7 @@ import copy
 import math
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, TensorDataset
-from NDP_functions import compute_mad
+from NABC_functions import compute_mad
 
 def NABC_train(X, Y, net_str, device="cpu", p_train=0.7, N_EPOCHS=250, lr=1e-3, val_batch = 10_000, early_stop_patience = 20):
     torch.set_default_device(device)
