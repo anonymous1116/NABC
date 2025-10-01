@@ -26,15 +26,10 @@ def main(args):
     priors = Priors(args.task)
     simulators = Simulators(args.task)
     
-    Y = priors.sample((args.num_training*2,))
+    Y = priors.sample((args.num_training,))
     X = simulators(Y)
 
-    if args.task == "cont_table":
-        X = torch.clone(X[:,:3])
-        Y = torch.clone(Y[:,:3])
-    
     X_train, Y_train = X[:args.num_training, :], Y[:args.num_training,:]
-    X_train2, Y_train2 = X[args.num_training:, :], Y[args.num_training:,:]
     
     print(X_train.size(),Y_train.size())
     # Learning hyperparameters
