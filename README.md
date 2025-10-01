@@ -32,3 +32,37 @@ python benchmark/benchmark_training.py \
 - `$seed ∈ {1,…,10}`
 - Defaults: `$layer_len=256`, `$N_EPOCHS=200`
 - After this step, the folder **`NABC_nets/`** is created and the trained network is saved there.
+
+
+### 2️⃣ Train the conditional variance
+```bash
+python benchmark/benchmark_cov_training.py \
+    --num_training_mean $num_training_mean \
+    --num_training_cov $num_training_cov \
+    --task $task \
+    --N_EPOCHS $N_EPOCHS \
+    --seed $seed \
+    --layer_len $layer_len
+```
+**Notes:**
+- `$num_training_mean` = value of `$num_training` from Step 1  
+- `$num_training_cov` ≈ `2 × num_training_mean` (recommended)  
+- `$seed ∈ {1,…,10}`  
+- Defaults: `$layer_len=256`, `$N_EPOCHS=200`
+
+### 3️⃣ Calibration
+```bash
+python benchmark/benchmark_calibrating.py \
+    --x0_ind $x0_ind \
+    --seed $seed \
+    --L $L \
+    --task $task \
+    --num_training_mean $num_training_mean \
+    --num_training_cov $num_training_cov \
+    --layer_len $layer_len \
+    --tol $tol
+```
+**Notes:**
+- $num_training_mean and $num_training_cov must match Step 2
+- `$x0_ind` ∈ {1,…,10}, `$seed` ∈ {1,…,10}
+- You can vary both `$L` and `$tol` where `$tol` corresponds to η in the manuscript
