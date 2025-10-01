@@ -18,6 +18,11 @@ from simulator import Simulators, Priors, Bounds
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def main(args):
+    if args.save_directory is None:
+        save_directory = "./nets_NABC"
+    else:
+        save_directory = args.save_directory
+        
     # Set seeds
     torch.set_default_device("cpu")
     torch.manual_seed(args.seed)
@@ -31,14 +36,14 @@ def main(args):
 
     X_train, Y_train = X[:args.num_training, :], Y[:args.num_training,:]
     
-    print(X_train.size(),Y_train.size())
+    print(X_train.size(), Y_train.size())
     # Learning hyperparameters
     D_in, D_out, Hs = X_train.size(1), Y_train.size(1), args.layer_len
 
     # Save the models
     ## Define the output directory
     print(f"start", flush=True)
-    output_dir = f"../depot_hyun/hyun/NDP/{args.task}/train_{int(args.num_training/1_000)}K/"
+    output_dir = f"{save_directory}/{args.task}/train_{int(args.num_training/1_000)}K/"
     
     ## Create the directory if it doesn't exist
     if not os.path.exists(output_dir):
@@ -84,9 +89,10 @@ def get_args():
                         help = "See number (default: 1)")
     parser.add_argument("--layer_len", type = int, default = 256,
                         help = "layer length of FL network (default: 256)")
+    parser.add_argument("--save_directory", type = str, default = None,
+                        help = "None: default")
+    
     return parser.parse_args()
-
-
 
 
 if __name__ == "__main__":
