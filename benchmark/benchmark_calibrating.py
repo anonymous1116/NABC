@@ -179,7 +179,7 @@ def main(args):
     print(sci_str)  # Output: '1e-02'
     
 
-    output_dir = f".results/{args.task}/mean_{int(num_training_mean/1_000)}K_cov_{int(num_training_cov/1_000)}K/calib_{int(args.L/1_000_000)}M_eta{sci_str}"
+    output_dir = f"results/{args.task}/mean_{int(num_training_mean/1_000)}K_cov_{int(num_training_cov/1_000)}K/calib_{int(args.L/1_000_000)}M_eta{sci_str}"
     ## Create the directory if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
