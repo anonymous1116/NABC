@@ -44,7 +44,7 @@ def main(args):
     simulators = Simulators(args.task)
     bounds = Bounds(args.task)
     
-    net_dir = f"../depot_hyun/hyun/NDP/{args.task}_exp/mean_{int(num_training_mean/1000)}K_cov_{int(num_training_cov/1_000)}K_layer_{args.layer_len}"
+    net_dir = f"../depot_hyun/hyun/NDP/{args.task}/mean_{int(num_training_mean/1000)}K_cov_{int(num_training_cov/1_000)}K_layer_{args.layer_len}"
 
     assert os.path.exists(net_dir), f"Model directory {net_dir} does not exist"
 
@@ -90,19 +90,12 @@ def main(args):
     elif args.task in ["slcp_summary"]:
         s_dp_tmp = sbi_task.get_observation(num_observation = args.x0_ind)
         s_dp_tmp = SLCP_summary(s_dp_tmp)
-    elif args.task == "MoG_5":
-        tmp = torch.load("../depot_hyun/NeuralABC_R/MoG_5/MoG_x0.pt")
-        s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
-    elif args.task in ["MoG_10", "Lapl_10", "MoG_2"]:
-        tmp = torch.load(f"../depot_hyun/NeuralABC_R/{args.task}/{args.task}_x0.pt")
-        s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
-    elif args.task == "Lapl_5":
-        tmp = torch.load("/home/hyun18/NeuralABC/seeds/Lapl_x0.pt")
+    elif args.task in ["MoG_2", "MoG_5", "MoG_10", "Lapl_5", "Lapl_10"]:
+        tmp = torch.load(f"x0s/{args.task}_x0.pt")
         s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
     elif args.task == "my_twomoons":
-        tmp = torch.load("/home/hyun18/NeuralABC/seeds/my_twomoons2.pt")
+        tmp = torch.load("x0s/my_twomoons.pt")
         s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
-    
     
     print(s_dp_tmp)
     if s_dp_tmp.ndim == 1:
@@ -158,17 +151,14 @@ def main(args):
 
     print("X_abc size", X_abc.size())
 
-    if args.task in ["bernoulli_glm", "MoG_5", "Lapl_5", "MoG_10", "Lapl_10", "MoG_2"]:    
-        post_sample = torch.load(f"../depot_hyun/NeuralABC_R/{args.task}/post_{args.x0_ind}.pt")
-    elif args.task in ["slcp_summary_transform2"]:    
-        post_sample = torch.load(f"../depot_hyun/NeuralABC_R/slcp_benchmark/benchmark_post_sample_x0_{args.x0_ind}.pt")
+    if args.task in ["bernoulli_glm", "MoG_5", "Lapl_5", "MoG_10", "Lapl_10", "MoG_2", "my_twomoons"]:    
+        post_sample = torch.load(f"posterior/{args.task}/post_{args.x0_ind}.pt")
+    elif args.task in ["slcp_summary"]:    
+        post_sample = torch.load(f"posterior/{args.task}/benchmark_post_sample_x0_{args.x0_ind}.pt")
         if post_sample.size(0) >12000:
             burn_in = int(post_sample.size(0) * 0.2)
             sam_ind = np.random.choice(np.arange(burn_in, post_sample.size(0)), 10_000, replace = False)
             post_sample = post_sample[sam_ind,:]
-    
-    elif args.task in ["my_twomoons"]:    
-        post_sample = torch.load(f"../depot_hyun/NeuralABC_R/my_twomoons2/post_{args.x0_ind}.pt")
     else:
         print(f"no reference posterior samples avilable for the task {args.task}")
     
@@ -181,16 +171,15 @@ def main(args):
     print("NABC sample size: ", calibrate_results[0].detach().cpu().size())
     results_size = min(10_000, calibrate_results[0].detach().cpu().size(0))
 
-    tmp = c2st(post_sample[:results_size].cpu(), calibrate_results[0].detach().cpu()[:results_size] )
-    print(tmp)    
+    NABC_results = c2st(post_sample[:results_size].cpu(), calibrate_results[0].detach().cpu()[:results_size] )
+    print("C2ST:", NABC_results)    
     
-    NABC_results.append(tmp)
     
     sci_str = format(tol*tol0, ".0e")
     print(sci_str)  # Output: '1e-02'
     
 
-    output_dir = f"./NABC_results/{args.task}/mean_{int(num_training_mean/1_000)}K_cov_{int(num_training_cov/1_000)}K_resample/amor_{int(args.L/1_000_000)}M_eta{sci_str}"
+    output_dir = f".results/{args.task}/mean_{int(num_training_mean/1_000)}K_cov_{int(num_training_cov/1_000)}K/calib_{int(args.L/1_000_000)}M_eta{sci_str}"
     ## Create the directory if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -207,8 +196,9 @@ def main(args):
     plt.savefig(Path(output_dir) / f"x0{args.x0_ind}_seed{args.seed}_calibrated.png")
     plt.close()
     
-    torch.save(NABC_results, f"{output_dir}/x0{args.x0_ind}_seed{args.seed}.pt")
+    torch.save(NABC_results, f"{output_dir}/C2ST_x0{args.x0_ind}_seed{args.seed}.pt")
     torch.save([torch.cuda.get_device_name(0), elapsed_time], f"{output_dir}/x0{args.x0_ind}_seed{args.seed}_info.pt")
+    torch.save(calibrate_results[0].detach().cpu(), f"{output_dir}/samples_x0{args.x0_ind}_seed{args.seed}.pt")
 
 def get_args():
     parser = argparse.ArgumentParser(description="Run simulation with customizable parameters.")
