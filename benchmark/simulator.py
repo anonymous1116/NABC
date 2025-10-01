@@ -9,7 +9,7 @@ import numpy as np
 # Optional: you can use this from torch.distributions if available
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 
-from NDP_functions import SLCP_summary
+from NABC_functions import SLCP_summary
 
 def Bounds(task_name: str):
     task_name = task_name.lower()
