@@ -15,13 +15,13 @@ For comparison, Neural Posterior Estimation (NPE) and Neural Likelihood Estimati
 
 ## 📂 Repository Structure
 ### NABC
-- `benchmark/benchmark_training.py` trains the conditional mean function (**Sec 3.1**) and provides trained network and training time.  
-- `benchmark/benchmark_cov_training.py` trains the conditional variance function (**Sec 3.2**) and provides trained network and training time.  
-- `benchmark/benchmark_calibrating.py` performs calibration (**Sec 3.3**) and provides C2ST and elapsed time for calibration.
+- `benchmark/benchmark_training.py` trains the conditional mean function (**Sec 3.1**) and outputs trained network and training time.  
+- `benchmark/benchmark_cov_training.py` trains the conditional variance function (**Sec 3.2**) and outputs trained network and training time.  
+- `benchmark/benchmark_calibrating.py` performs calibration (**Sec 3.3**) and outputs C2ST and elapsed time for calibration.
 
 ### NPE and NLE
-- `NPLE/NPE_training.py` trains NPE and NLE method and saves trained network and training time
-- `NPLE/NPE_inference.py` performs NPE and NLE inference and provides C2ST and elapsed time for inference. 
+- `NPLE/NPE_training.py` trains NPE and NLE method and outputs trained network and training time
+- `NPLE/NPE_inference.py` performs NPE and NLE inference and outputs C2ST and elapsed time for inference. 
 ---
 
 ## 🚀 NABC Usage
