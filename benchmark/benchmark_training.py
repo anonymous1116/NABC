@@ -12,7 +12,7 @@ import subprocess
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 from module import FL_Net, FL_Net_bounded
 import time
-from NDP import NDP_train
+from NDP import NABC_train
 from simulator import Simulators, Priors, Bounds
 # Set the default device based on availability
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -65,7 +65,7 @@ def main(args):
     start_time = time.time()  # Start timer
     val_batch = 10_000
     early_stop_patience = 50
-    tmp = NDP_train(X_train, Y_train, net, device=device, N_EPOCHS=args.N_EPOCHS, val_batch = val_batch, early_stop_patience = early_stop_patience)
+    tmp = NABC_train(X_train, Y_train, net, device=device, N_EPOCHS=args.N_EPOCHS, val_batch = val_batch, early_stop_patience = early_stop_patience)
     end_time = time.time() 
     elapsed_time = end_time - start_time  # Calculate elapsed time
     print(f"Mean Function Training completed in {elapsed_time/60:.2f} mins", flush=True)
