@@ -10,9 +10,9 @@ a framework that combines three key components:
 ---
 
 ## 📂 Repository Structure
-- `benchmark/benchmark_training.py` → trains the conditional mean function  
-- `benchmark/benchmark_cov_training.py` → trains the conditional variance function  
-- `benchmark/benchmark_calibrating.py` → performs calibration  
+- `benchmark/benchmark_training.py` → trains the conditional mean function  (Sec 3.1)
+- `benchmark/benchmark_cov_training.py` → trains the conditional variance function (Sec 3.2)
+- `benchmark/benchmark_calibrating.py` → performs calibration (Sec 3.3)
 
 ---
 
@@ -22,7 +22,7 @@ a framework that combines three key components:
 python benchmark/benchmark_training.py \
     --num_training $num_training \
     --task $task \
-    --N_EPOCHS 200 \
+    --N_EPOCHS $N_EPOCHS \
     --seed $seed \
     --layer_len $layer_len
 
