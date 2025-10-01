@@ -67,7 +67,7 @@ def main(args):
                                         mcmc_parameters={"num_chains": 20,
                                                         "thin": 10})
         proposal = posterior.set_default_x(x0)
-        sample_post = proposal.sample((10,), x=x0)
+        sample_post = proposal.sample((10000,), x=x0)
         time1 = time.time()
         NLE_inference_elapsed_time = time1-time0
     else:
@@ -104,3 +104,4 @@ if __name__ == "__main__":
 
 
 # python NPE/NPE_inference.py --method "NPE" --task "my_twomoons" --seed 1 --x0_ind 10 --cond_den "maf" --num_training 1000 
+#python NPE/NPE_inference.py --method "NLE" --task "my_twomoons" --seed 1 --x0_ind 10 --cond_den "maf" --num_training 1000 
