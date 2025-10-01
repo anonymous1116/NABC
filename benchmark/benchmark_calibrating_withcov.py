@@ -11,7 +11,7 @@ from module import FL_Net, CovarianceNet, FL_Net_bounded
 from sbibm.metrics.c2st import c2st
 from benchmark.simul_funcs import truncated_mvn_sample
 from simulator import Priors, Simulators, Bounds
-from NDP_functions import SLCP_summary, SLCP_summary_transform, SLCP_summary_transform2
+from NDP_functions import SLCP_summary, SLCP_summary_transform, SLCP_summary_transform2, SLCP_summary_transform
 from vary_dim_out.NDP_resampling import UnifSample, param_box
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -34,7 +34,7 @@ def main(args):
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    if args.task in ["slcp_summary", "slcp2_summary", "slcp3_summary", "slcp3", "my_slcp2", "my_slcp3", "slcp_summary_transform", "slcp_summary_transform2"]:
+    if args.task in ["slcp", "slcp_summary", "slcp2_summary", "slcp3_summary", "slcp3", "my_slcp2", "my_slcp3", "slcp_summary_transform", "slcp_summary_transform2"]:
         sbi_task = sbibm.get_task("slcp")  # See sbibm.get_available_tasks() for all tasks
     elif args.task in ["bernoulli_glm"]:    
         sbi_task = sbibm.get_task(args.task)  # See sbibm.get_available_tasks() for all tasks
@@ -48,7 +48,7 @@ def main(args):
     elif args.task == "my_slcp2":
         net_dir = f"../depot_hyun/hyun/NDP/my_slcp/mean_{int(num_training_mean/1000)}K_cov_{int(num_training_cov/1_000)}K_layer_{args.layer_len}"
     else:
-        net_dir = f"../depot_hyun/hyun/NDP/{args.task}/mean_{int(num_training_mean/1000)}K_cov_{int(num_training_cov/1_000)}K_layer_{args.layer_len}"
+        net_dir = f"../depot_hyun/hyun/NDP/{args.task}_exp/mean_{int(num_training_mean/1000)}K_cov_{int(num_training_cov/1_000)}K_layer_{args.layer_len}"
     assert os.path.exists(net_dir), f"Model directory {net_dir} does not exist"
 
     tmp1 = torch.load(f"{net_dir}/best_model_mean_state_{seed}.pt")
@@ -59,6 +59,11 @@ def main(args):
 
     Y_cal = priors.sample((1_000_000,))
     X_cal = simulators(Y_cal)
+
+    if args.task == "cont_table":
+        X_cal = torch.clone(X_cal[:,:3])
+        Y_cal = torch.clone(Y_cal[:,:3])
+        
 
     # Learning hyperparameters
     D_in, D_out, Hs = X_cal.size(1), Y_cal.size(1), 256
@@ -87,7 +92,7 @@ def main(args):
 
     
     start_time = time.time()
-    if args.task in ["slcp_summary", "slcp2_summary", "slcp3_summary", "slcp3", "bernoulli_glm", "my_slcp2", "my_slcp3", "slcp_summary_transform", "slcp_summary_transform2"]:
+    if args.task in ["slcp", "slcp_summary", "slcp2_summary", "slcp3_summary", "slcp3", "bernoulli_glm", "my_slcp2", "my_slcp3", "slcp_summary_transform", "slcp_summary_transform2"]:
         s_dp_tmp = sbi_task.get_observation(num_observation = args.x0_ind)
 
 
@@ -126,8 +131,11 @@ def main(args):
     elif args.task == "my_twomoons":
         tmp = torch.load("/home/hyun18/NeuralABC/seeds/my_twomoons2.pt")
         s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
-    
-    
+    elif args.task == "cond_table":
+        tmp = torch.load(f"../depot_hyun/NeuralABC_R/{args.task}/{args.task}_x0.pt")
+        s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
+        s_dp_tmp = s_dp_tmp[:3]
+    print(s_dp_tmp)
     if s_dp_tmp.ndim == 1:
         s_dp_tmp = torch.reshape(s_dp_tmp, (1,s_dp_tmp.size(0)))
         
@@ -239,7 +247,7 @@ def main(args):
     print(sci_str)  # Output: '1e-02'
     
 
-    output_dir = f"./NABC_results/{args.task}_withcov/mean_{int(num_training_mean/1_000)}K_cov_{int(num_training_cov/1_000)}K_resample/amor_{int(args.L/1_000_000)}M_eta{sci_str}"
+    output_dir = f"./NABC_results/{args.task}_exp_withcov/mean_{int(num_training_mean/1_000)}K_cov_{int(num_training_cov/1_000)}K_resample/amor_{int(args.L/1_000_000)}M_eta{sci_str}"
     ## Create the directory if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)

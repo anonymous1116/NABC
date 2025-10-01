@@ -75,30 +75,6 @@ def main(args):
     torch.save(net.state_dict(),  output_dir + "/" + args.task + str(args.seed) +"_mean.pt")
     torch.save(elapsed_time,  output_dir + "/" + args.task + str(args.seed) +"_time.pt")
     torch.save(torch.cuda.get_device_name(0), output_dir + "/" + args.task + str(args.seed)+ "_gpu.pt")
-    
-    print(f"Mean Function saved", flush=True)
-
-    if args.cov == 1:
-        create_cov_job_script(args)
-
-    torch.set_default_device("cpu")
-
-    print(f"cMAD learning start", flush=True)
-    
-    net.eval()
-    resid = (Y_train2.detach().cpu() - net(X_train2).detach().cpu())
-    
-    resid = torch.max(torch.abs(resid), torch.ones(1) * 1e-30).log()
-    net2 = FL_Net(D_in, D_out, H=Hs, H2=Hs, H3=Hs)
-
-    tmp2 = NDP_train(X_train2, resid, net2, device, N_EPOCHS=args.N_EPOCHS, val_batch = val_batch, early_stop_patience = 50)
-
-    net2.load_state_dict(tmp2)
-    net2 = net2.to("cpu")
-
-    torch.save(net2.state_dict(),  output_dir + "/" + args.task + str(args.seed) +"_cMAD.pt")
-    torch.save(elapsed_time,  output_dir + "/" + args.task + str(args.seed) +"_time_cMAD.pt")
-    print("## cMAD training job script completed ##", flush=True)
 
 
 def create_cov_job_script(args):
