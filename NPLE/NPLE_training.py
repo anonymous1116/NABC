@@ -77,4 +77,4 @@ if __name__ == "__main__":
     args = get_args()  # Parse command-line arguments
     main(args)  # Pass the entire args object to the main function
 
-# python NPLE/NPLE_training.py --task "my_twomoons" --seed 1 --method "NPE" --cond_den "maf" --num_training 1000
+# python NPLE/NPLE_training.py --task "bernoulli_glm" --seed 1 --method "NPE" --cond_den "maf" --num_training 1000
