@@ -429,9 +429,6 @@ class WeightDecayScheduler:
 
 
 class WeightDecayScheduler_cov:
-
-
-
     def __init__(self, optimizer, initial_weight_decay=1e-5, factor=0.5, patience=10):
         self.optimizer = optimizer
         self.initial_weight_decay = initial_weight_decay
