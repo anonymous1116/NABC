@@ -103,5 +103,5 @@ if __name__ == "__main__":
     main(args)  # Pass the entire args object to the main function
 
 
-# python NPE/NPE_inference.py --method "NPE" --task "my_twomoons" --seed 1 --x0_ind 10 --cond_den "maf" --num_training 1000 
-#python NPE/NPE_inference.py --method "NLE" --task "my_twomoons" --seed 1 --x0_ind 10 --cond_den "maf" --num_training 1000 
+# python NPLE/NPLE_inference.py --method "NPE" --task "my_twomoons" --seed 1 --x0_ind 10 --cond_den "maf" --num_training 1000 
+#python NPLE/NPLE_inference.py --method "NLE" --task "my_twomoons" --seed 1 --x0_ind 10 --cond_den "maf" --num_training 1000 
