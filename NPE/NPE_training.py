@@ -26,7 +26,7 @@ def main(args):
     X = simulators(theta)
 
     # Create inference object
-    inference = SNPE(prior=priors(), density_estimator=args.cond_den)
+    inference = SNPE(prior=priors, density_estimator=args.cond_den)
     inference = inference.append_simulations(theta, X)
 
     # Train the density estimator and build the posterior
