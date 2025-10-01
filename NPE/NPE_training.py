@@ -65,9 +65,9 @@ def main(args):
 def get_args():
     # Create an argument parser
     parser = argparse.ArgumentParser(description="Run simulations and inference.")
+    parser.add_argument('--method', type=str, default='NPE', help='NPE or NLE')
     parser.add_argument('--task', type=str, default='twomoons', help='Simulation type: twomoons, MoG, Lapl, GL_U or SLCP')
     parser.add_argument('--seed', type=int, default=1, help='Random seed for reproducibility')
-    parser.add_argument('--method', type=str, default='NPE', help='NPE or NLE')
     parser.add_argument('--cond_den', type=str, default='maf', help='Conditional density estimator type: mdn, maf, nsf')
     parser.add_argument('--num_training', type=int, default=500_000, help='Number of simulations to run')
     return parser.parse_args()
@@ -77,4 +77,4 @@ if __name__ == "__main__":
     args = get_args()  # Parse command-line arguments
     main(args)  # Pass the entire args object to the main function
 
-# python NPE/NPE_training.py --task "my_twomoons" --seed 1 --cond_den "maf" --num_training 1000
+# python NPE/NPE_training.py --task "my_twomoons" --seed 1 --method "NPE" --cond_den "maf" --num_training 1000
