@@ -1,0 +1,118 @@
+import torch
+import numpy as np
+import argparse
+import os
+from sbi import utils as utils
+from sbibm.metrics.c2st import c2st
+
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
+from module import FL_Net, FL_Net_bounded
+import time
+from NDP import NDP_train
+from NDP_functions import synthetic_pairs_Lapl,synthetic_pairs_MoG
+# Set the default device based on availability
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+def main(args):
+    # Set seeds
+    torch.set_default_device("cpu")
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+    
+    if args.task == "Lapl":
+        synthetic_fn = synthetic_pairs_Lapl
+    elif args.task == "MoG":
+        synthetic_fn = synthetic_pairs_MoG
+    else:
+        raise ValueError(f"Unsupported task: {args.task}")
+
+    X, Y =  synthetic_fn(args.num_training*2, args.dim_out)
+    
+    
+    X_train, Y_train = X[:args.num_training, :], Y[:args.num_training,:]
+    X_train2, Y_train2 = X[args.num_training:, :], Y[args.num_training:,:]
+    
+    # Learning hyperparameters
+    D_in, D_out, Hs = X_train.size(1), Y_train.size(1), args.layer_len
+
+    # Save the models
+    ## Define the output directory
+    print(f"start", flush=True)
+    output_dir = f"../depot_hyun/hyun/NDP/{args.task}/train_{int(args.num_training/1_000)}K/dim_out_{args.dim_out}"
+    
+    ## Create the directory if it doesn't exist
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir, exist_ok=True)
+        print(f"Directory '{output_dir}' created.")
+    else:
+        print(f"Directory '{output_dir}' already exists.")
+
+    #net = FL_Net_bounded(D_in, D_out, H=Hs, p = 0.1, bounds = [[-5,5]]*args.dim_out).to(device)
+    bounds_base = [-5,5] if args.task == "Lapl" else [-10,10]  
+    net = FL_Net_bounded(D_in, D_out, H=Hs, p = 0.1, bounds = [bounds_base]*args.dim_out).to(device)
+        
+    # Train Mean Function
+    print(f"start training for mean function", flush=True)
+    start_time = time.time()  # Start timer
+    val_batch = 10_000
+    early_stop_patience = 50
+    tmp = NDP_train(X_train, Y_train, net, device=device, N_EPOCHS=args.N_EPOCHS, val_batch = val_batch, early_stop_patience = early_stop_patience)
+    end_time = time.time() 
+    elapsed_time = end_time - start_time  # Calculate elapsed time
+    print(f"Mean Function Training completed in {elapsed_time/60:.2f} mins", flush=True)
+    
+    net.load_state_dict(tmp)
+    net = net.to("cpu")
+
+    torch.save(net.state_dict(),  output_dir + "/" + args.task + str(args.seed) +"_mean.pt")
+    torch.save(elapsed_time,  output_dir + "/" + args.task + str(args.seed) +"_time.pt")
+    torch.save(torch.cuda.get_device_name(0), output_dir + "/" + args.task + str(args.seed)+ "_gpu.pt")
+    
+    print(f"Mean Function saved", flush=True)
+    torch.set_default_device("cpu")
+
+    print(f"cMAD learning start", flush=True)
+    
+    net.eval()
+    resid = (Y_train2.detach().cpu() - net(X_train2).detach().cpu())
+    
+    resid = torch.max(torch.abs(resid), torch.ones(1) * 1e-30).log()
+    net2 = FL_Net(D_in, D_out, H=Hs, H2=Hs, H3=Hs)
+
+    tmp2 = NDP_train(X_train2, resid, net2, device, N_EPOCHS=args.N_EPOCHS, val_batch = val_batch, early_stop_patience = 50)
+
+    net2.load_state_dict(tmp2)
+    net2 = net2.to("cpu")
+
+    torch.save(net2.state_dict(),  output_dir + "/" + args.task + str(args.seed) +"_cMAD.pt")
+    torch.save(elapsed_time,  output_dir + "/" + args.task + str(args.seed) +"_time_cMAD.pt")
+    print("## cMAD training job script completed ##", flush=True)
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description="Run simulation with customizable parameters.")
+    parser.add_argument("--num_training", type=int, default=100_000, 
+                        help="Number of training data (default: 100_000)")
+    parser.add_argument('--task', type=str, default='twomoons', 
+                        help='Simulation type: twomoons, MoG, MoUG, Lapl, GL_U or slcp, slcp2')
+    parser.add_argument("--N_EPOCHS", type=int, default=100, 
+                        help="Number of EPOCHS (default: 100)")
+    parser.add_argument("--seed", type = int, default = 1,
+                        help = "See number (default: 1)")
+    parser.add_argument("--layer_len", type = int, default = 256,
+                        help = "layer length of FL network (default: 256)")
+    parser.add_argument("--dim_out", type = int, default = 1,
+                        help = "See number (default: 1)")
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = get_args()
+    main(args)
+    #main_cond(args)
+    
+    # Use the parsed arguments
+    print(f"task: {args.task}")
+    print(f"Number of epochs: {args.N_EPOCHS}")
+    print(f"seed: {args.seed}")

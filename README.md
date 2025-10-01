@@ -1,2 +1,1 @@
-# NABC
-Neural Amortized Bayesian Computation
+# NDP
