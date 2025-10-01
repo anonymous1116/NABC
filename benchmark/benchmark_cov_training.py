@@ -40,9 +40,9 @@ def main(args):
     D_in, D_out, Hs = X.size(1), Y.size(1), args.layer_len
 
     if bounds is None:
-        mean_net = FL_Net(D_in, D_out, H = 256, H2 = 256, H3 = 256).to(device)
+        mean_net = FL_Net(D_in, D_out, H = Hs, H2 = Hs, H3 = Hs).to(device)
     else:
-        mean_net = FL_Net_bounded(D_in, D_out, H=256, p = 0.1, bounds = bounds).to(device)
+        mean_net = FL_Net_bounded(D_in, D_out, H=Hs, p = 0.1, bounds = bounds).to(device)
     
     mean_net.load_state_dict(tmp)
     

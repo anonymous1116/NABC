@@ -64,7 +64,7 @@ def main(args):
 
 
     # Learning hyperparameters
-    D_in, D_out, Hs = X_cal.size(1), Y_cal.size(1), 256
+    D_in, D_out, Hs = X_cal.size(1), Y_cal.size(1), args.layer
     if bounds is None:
         mean_net = FL_Net(D_in, D_out, H = Hs, H2 = Hs, H3 = Hs).to(device)
     else:
@@ -228,7 +228,7 @@ def get_args():
     
     return parser.parse_args()
 
-#python benchmark/benchmark_calibrating.py --x0_ind 1 --seed 1 --L 1000000 --task my_twomoons --num_training_mean 10000 --num_training_cov 20000 --layer_len 256 --tol 1e-3
+#python benchmark/benchmark_calibrating.py --x0_ind 1 --seed 1 --L 10000000 --task my_twomoons --num_training_mean 10000 --num_training_cov 20000 --layer_len 256 --tol 1e-3
 
 
 if __name__ == "__main__":

@@ -92,7 +92,6 @@ def get_args():
                         help = "layer length of FL network (default: 256)")
     parser.add_argument("--nets_directory", type = str, default = None,
                         help = "None: default")
-    
     return parser.parse_args()
 
 

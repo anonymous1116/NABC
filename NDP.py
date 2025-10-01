@@ -135,7 +135,6 @@ def NDP_train(X, Y, net_str, device="cpu", p_train=0.7, N_EPOCHS=250, lr=1e-3, v
     print(f"============= Best validation loss: {best_val_loss} =============", flush = True)
     return best_model_state
 
-
 def wasserstein_distance_Nto1(X, x0, chunk_size = 100_000, device = 'cuda'):
     num_chunks = X.size(0) // chunk_size
     dist_tmp = []
@@ -157,8 +156,6 @@ def wasserstein_distance_Nto1(X, x0, chunk_size = 100_000, device = 'cuda'):
     # Clear cached memory
     torch.cuda.empty_cache()
     return torch.cat(dist_tmp, dim=0)
-
-
 
 def Markov_sliced_wasserstein_distance(X, x0, k = 2, n_projections= 100, chunk_size=100_000):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -195,8 +192,6 @@ def Markov_sliced_wasserstein_distance(X, x0, k = 2, n_projections= 100, chunk_s
         torch.cuda.empty_cache()  # Ensure GPU memory is released
 
     return SL_wasserstein_distances  # Shape: (N,)
-
-
 
 def wasserstein_gaussian(ts_batch, ts_ref, chunk_size=100_000):
     """
@@ -239,8 +234,6 @@ def wasserstein_gaussian(ts_batch, ts_ref, chunk_size=100_000):
         torch.cuda.empty_cache()  # Ensure GPU memory is released
 
     return wasserstein_distances  # Shape: (N,)
-
-
 
 def calibrate_cov(x0, X_cal, y_cal, mean_net, covnet, n_samples= 10000, tol = .01, bounds = None, device = "cpu", case = None, chunk_size = 10_000):
     x0 = x0.to(device)
@@ -356,8 +349,6 @@ def calibrate_cov(x0, X_cal, y_cal, mean_net, covnet, n_samples= 10000, tol = .0
         sample_post = sample_post_large[sam_ind_post,:]
     return sample_post, adj
 
-
-
 def learning_checking(X, Y, net, num = 10000, name = None):
     net = net.to("cpu")
     X = X.to("cpu")
@@ -426,7 +417,6 @@ class WeightDecayScheduler:
                 print(f"Epoch {epoch}: Reduced weight decay to {param_group['weight_decay']:.6e}")
         else:
             self.epochs_since_last_update += 1
-
 
 class WeightDecayScheduler_cov:
     def __init__(self, optimizer, initial_weight_decay=1e-5, factor=0.5, patience=10):
