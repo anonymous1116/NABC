@@ -32,7 +32,7 @@ def main(args):
 
 
     print(X.size(), Y.size())
-    net_dir = f"{save_directory}/hyun/NDP/{args.task}/train_{int(args.num_training_mean/1_000)}K/{args.task}{args.seed}_mean.pt"
+    net_dir = f"{save_directory}/{args.task}/train_{int(args.num_training_mean/1_000)}K/{args.task}{args.seed}_mean.pt"
     tmp = torch.load(net_dir)
 
     bounds = Bounds(args.task)
@@ -258,6 +258,8 @@ def get_args():
                         help="Number of layers for covnet (default: 128)")
     parser.add_argument("--N_EPOCHS", type=int, default=200, 
                         help="Number of epochs (default: 200)")
+    parser.add_argument("--save_directory", type = str, default = None,
+                        help = "None: default")
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -270,3 +272,6 @@ if __name__ == "__main__":
     print(f"num_training_cov: {args.num_training_cov}")
     print(f"layer_len: {args.layer_len}")
     print(f"N_EPOCHS: {args.N_EPOCHS}")
+
+
+#python benchmark/benchmark_cov_training.py --num_training_mean 10000 --num_training_cov 20000 --task "my_twomoons" --N_EPOCHS 1 --seed 1 --layer_len 256 
