@@ -221,6 +221,9 @@ def get_args():
     
     return parser.parse_args()
 
+#python benchmark/benchmark_calibrating.py --x0_ind 1 seed 1 --L 1000000 --task my_twomoons --num_training_mean 10000 --num_training_cov 20000 layer_len 256 tol 1e-3
+
+
 if __name__ == "__main__":
     args = get_args()
     main(args)
