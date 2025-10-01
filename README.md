@@ -69,7 +69,7 @@ python benchmark/benchmark_calibrating.py \
     --tol $tol
 ```
 - $num_training_mean and $num_training_cov must match Step 2
-- `$x0_ind` ∈ {1,…,10}, `$seed` ∈ {1,…,10}
+- `$x0_ind` ∈ {1,…,10}: index of observations
 - You can vary both `$L` and `$tol` where `$tol` corresponds to η in the manuscript
 
 
