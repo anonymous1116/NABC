@@ -59,7 +59,7 @@ def main(args):
     x0 = torch.tensor(s_dp_tmp, dtype = torch.float32)
         
     sample_post = inference.build_posterior().sample((10000,), x=x0)
-    dist = c2st(post_sample[:sample_post], sample_post[:sample_post])
+    dist = c2st(post_sample, sample_post)
     print("C2ST", dist)
     output_dir = f"./NPE_results/{args.task}/{args.cond_den}/J_{int(args.num_training/1000)}K"   
     os.makedirs(output_dir, exist_ok=True)
