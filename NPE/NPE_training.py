@@ -20,7 +20,7 @@ def main(args):
     simulators = Simulators(args.task)
 
     # Sample theta from the prior
-    theta = priors().sample((args.num_training,))
+    theta = priors.sample((args.num_training,))
 
     # Run the simulator
     X = simulators(theta)
