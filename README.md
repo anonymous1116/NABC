@@ -7,7 +7,7 @@ a framework with three key components:
 2. **Learning conditional variance function**  
 3. **Calibration**
 
-**1-dimensional tutorial with gaussian mixture example: NABC_tutorial.ipynb
+**1-dimensional tutorial with gaussian mixture example: `NABC_tutorial.ipynb`
 
 For comparison, Neural Posterior Estimation (NPE) and Neural Likelihood Estimation (NLE) can be reproduced.
 1. **NPE and NLE training**
