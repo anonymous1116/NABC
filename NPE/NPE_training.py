@@ -69,3 +69,5 @@ def get_args():
 if __name__ == "__main__":
     args = get_args()  # Parse command-line arguments
     main(args)  # Pass the entire args object to the main function
+
+# python NPE/NPE_training.py --task "my_twomoons" --seed 1 --cond_den "maf" --num_training 1000

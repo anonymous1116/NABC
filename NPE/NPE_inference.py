@@ -21,7 +21,6 @@ def main(args):
     elif args.task in ["bernoulli_glm"]:    
         sbi_task = sbibm.get_task(args.task)  # See sbibm.get_available_tasks() for all tasks
     
-
     if args.task in ["bernoulli_glm"]:
         s_dp_tmp = sbi_task.get_observation(num_observation = args.x0_ind)
     elif args.task in ["slcp_summary"]:
@@ -39,7 +38,6 @@ def main(args):
         s_dp_tmp = torch.reshape(s_dp_tmp, (1,s_dp_tmp.size(0)))
     
 
-
     if args.task in ["bernoulli_glm", "MoG_5", "Lapl_5", "MoG_10", "Lapl_10", "MoG_2", "my_twomoons"]:    
         post_sample = torch.load(f"posterior/{args.task}/post_{args.x0_ind}.pt")
     elif args.task in ["slcp_summary"]:    
@@ -53,21 +51,22 @@ def main(args):
     
     output_file_path = os.path.join(f'./NPE_nets/{args.task}/J_{int(args.num_training/1000)}K/{args.task}_{args.seed}_{args.cond_den}.pkl')
     if not os.path.exists(output_file_path):
-            raise FileNotFoundError(f"NPE results file not found: {output_file_path}")
+        raise FileNotFoundError(f"NPE results file not found: {output_file_path}")
     with open(output_file_path, 'rb') as f:
-            saved_data = pickle.load(f)
+        saved_data = pickle.load(f)
     inference = saved_data['inference']
+    training_time = saved_data['elapsed_time']
     x0 = torch.tensor(s_dp_tmp, dtype = torch.float32)
         
     sample_post = inference.build_posterior().sample((10000,), x=x0)
     dist = c2st(post_sample[:sample_post], sample_post[:sample_post])
-    
-    output_dir = f"./NPE_results/{args.task}_results/{args.cond_den}/J_{int(args.num_training/1000)}K"   
+    print("C2ST", dist)
+    output_dir = f"./NPE_results/{args.task}/{args.cond_den}/J_{int(args.num_training/1000)}K"   
     os.makedirs(output_dir, exist_ok=True)
-    torch.save(dist, os.path.join(output_dir, f"result_x0_{args.x0_ind}_seed_{args.seed}.pt"))  # Customize filename as needed
-   
-
+    torch.save(dist, f"{output_dir}/C2ST_x0_{args.x0_ind}_seed_{args.seed}.pt")
+    torch.save(training_time, f"{output_dir}/training_time_x0_{args.x0_ind}_seed_{args.seed}.pt")  
     
+
 def get_args():
     # Create an argument parser
     parser = argparse.ArgumentParser(description="Run simulations and inference.")
@@ -82,3 +81,6 @@ def get_args():
 if __name__ == "__main__":
     args = get_args()  # Parse command-line arguments
     main(args)  # Pass the entire args object to the main function
+
+
+# python NPE/NPE_inference.py --task "my_twomoons" --seed 1 --x0_ind 10 --cond_den "maf" --num_training 1000 
