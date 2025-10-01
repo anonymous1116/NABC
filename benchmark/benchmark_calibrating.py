@@ -4,18 +4,19 @@ import os, sys
 import argparse
 import sbibm
 import time
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
-from NDP import calibrate, calibrate_cov
-from NDP_functions import ABC_rej2
-from module import FL_Net, CovarianceNet, FL_Net_bounded
 from sbibm.metrics.c2st import c2st
-from benchmark.simul_funcs import truncated_mvn_sample
-from simulator import Priors, Simulators, Bounds
-from NDP_functions import SLCP_summary, SLCP_summary_transform, SLCP_summary_transform2, SLCP_summary_transform
-from vary_dim_out.NDP_resampling import UnifSample, param_box
 import matplotlib.pyplot as plt
 from pathlib import Path
 from sbi.analysis import pairplot
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
+from NDP import calibrate_cov
+from NDP_functions import ABC_rej2
+from module import FL_Net, CovarianceNet, FL_Net_bounded
+from benchmark.simul_funcs import truncated_mvn_sample
+from simulator import Priors, Simulators, Bounds
+from NDP_functions import SLCP_summary
+from simul_funcs import UnifSample, param_box
 
 def main(args):
     seed = args.seed
@@ -34,7 +35,7 @@ def main(args):
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    if args.task in ["slcp_summary_transform2"]:
+    if args.task in ["slcp_summary"]:
         sbi_task = sbibm.get_task("slcp")  # See sbibm.get_available_tasks() for all tasks
     elif args.task in ["bernoulli_glm"]:    
         sbi_task = sbibm.get_task(args.task)  # See sbibm.get_available_tasks() for all tasks
@@ -86,9 +87,9 @@ def main(args):
     start_time = time.time()
     if args.task in ["bernoulli_glm"]:
         s_dp_tmp = sbi_task.get_observation(num_observation = args.x0_ind)
-    elif args.task in ["slcp_summary_transform2"]:
+    elif args.task in ["slcp_summary"]:
         s_dp_tmp = sbi_task.get_observation(num_observation = args.x0_ind)
-        s_dp_tmp = SLCP_summary_transform2(s_dp_tmp)
+        s_dp_tmp = SLCP_summary(s_dp_tmp)
     elif args.task == "MoG_5":
         tmp = torch.load("../depot_hyun/NeuralABC_R/MoG_5/MoG_x0.pt")
         s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
@@ -101,7 +102,6 @@ def main(args):
     elif args.task == "my_twomoons":
         tmp = torch.load("/home/hyun18/NeuralABC/seeds/my_twomoons2.pt")
         s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
-    
     
     
     print(s_dp_tmp)

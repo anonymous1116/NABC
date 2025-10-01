@@ -73,7 +73,7 @@ def compute_mad(X):
     # Return the result on the CPU
     return mad.cpu()
 
-def SLCP_summary(X):
+def SLCP_summary2(X):
     """
     Compute summary statistics for SLCP data:
     - Means and standard deviations for even and odd indexed dimensions
@@ -114,7 +114,7 @@ def log1p(x):
 def log1p2(x):
     return torch.log(.1+x)
 
-def SLCP_summary_transform2(X):
+def SLCP_summary(X):
     """
     Compute summary statistics for SLCP data:
     - Means and standard deviations for even and odd indexed dimensions
@@ -147,18 +147,8 @@ def SLCP_summary_transform2(X):
 
     return torch.cat((m0, m1, s0, s1, rho), dim=1).cpu()
 
-def cont_table_transform(X):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    tmp = torch.log(1e-6+X.to(device))
-    return tmp.cpu()
-
 
 def ABC_rej2(x0, X_cal, tol, device, case = None):
-    # Move all tensors to the target device at once
-    if case in ["slcp", "slcp3"]:
-        x0 = SLCP_summary_transform2(x0)
-        X_cal = SLCP_summary_transform2(X_cal)
-
     x0 = x0.to(device)
     X_cal = X_cal.to(device)
     mad = compute_mad(X_cal)
@@ -176,8 +166,6 @@ def ABC_rej2(x0, X_cal, tol, device, case = None):
     del mad, dist
     # Select points within tolerance and return to CPU if needed
     return wt1.cpu()
-
-
 
 
 def learning_checking(X, Y, net, num = 10000, name = None):

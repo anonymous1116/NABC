@@ -9,13 +9,13 @@ import numpy as np
 # Optional: you can use this from torch.distributions if available
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 
-from NDP_functions import SLCP_summary_transform2
+from NDP_functions import SLCP_summary
 
 def Bounds(task_name: str):
     task_name = task_name.lower()
     if task_name == "bernoulli_glm":
         return None
-    elif task_name in ["slcp_summary_transform2"]:
+    elif task_name in ["slcp_summary"]:
         return [[-3,3]] * 5
     elif task_name in ["mog_2"]:
         return [[-10, 10]] * 2
@@ -38,7 +38,7 @@ def Priors(task_name: str):
         precision_diag = 0.5 * torch.ones(dim)
         precision_matrix = torch.diag(precision_diag)
         return MultivariateNormal(loc=loc, precision_matrix=precision_matrix)
-    elif task_name in ["slcp_summary_transform2"]:
+    elif task_name in ["slcp_summary"]:
         return BoxUniform(low=-3 * torch.ones(5), high=3 * torch.ones(5))
     elif task_name in ["mog_2"]:
         return BoxUniform(low = -10*torch.ones(2), high = 10*torch.ones(2))
@@ -53,7 +53,7 @@ def Priors(task_name: str):
     else:
         raise ValueError(f"Unknown task name for prior: {task_name}")
 
-def simulator_slcp3(theta):
+def simulator_slcp(theta):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     theta = theta.to(device)
 
@@ -337,10 +337,10 @@ def Simulators(task_name: str):
     elif task_name in ["my_twomoons"]:
         return simulator_my_twomoons
     
-    elif task_name in ["slcp_summary_transform2"]:
+    elif task_name in ["slcp_summary"]:
         def summary_generator(theta):
-            x = simulator_slcp3(theta)  # [N, 8]
-            return SLCP_summary_transform2(x)  # [N, 5]
+            x = simulator_slcp(theta)  # [N, 8]
+            return SLCP_summary(x)  # [N, 5]
         return summary_generator
     
     elif task_name in ["mog_2", "mog_5", "mog_10"]:

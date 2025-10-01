@@ -17,6 +17,7 @@ from simulator import Simulators, Priors, Bounds
 # Set the default device based on availability
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
 def main(args):
     if args.save_directory is None:
         save_directory = "./nets_NABC"
@@ -104,3 +105,5 @@ if __name__ == "__main__":
     print(f"task: {args.task}")
     print(f"Number of epochs: {args.N_EPOCHS}")
     print(f"seed: {args.seed}")
+
+#python benchmark/benchmark_training.py --num_training 10000 --task "my_twomoons" --N_EPOCHS 1 --seed 1 --layer_len 256 
