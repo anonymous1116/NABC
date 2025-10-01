@@ -19,7 +19,7 @@ from NDP_functions import SLCP_summary
 from simul_funcs import UnifSample, param_box
 
 def main(args):
-    if args.save_directory is None:
+    if args.nets_directory is None:
         nets_directory = "./nets_NABC"
     else:
         nets_directory = args.nets_directory
