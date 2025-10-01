@@ -17,10 +17,10 @@ from simulator import Simulators, Priors, Bounds
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def main(args):
-    if args.save_directory is None:
-        save_directory = "./nets_NABC"
+    if args.nets_directory is None:
+        nets_directory = "./nets_NABC"
     else:
-        save_directory = args.save_directory
+        nets_directory = args.nets_directory
     
     torch.manual_seed(args.seed * 1234)
     
@@ -32,7 +32,7 @@ def main(args):
 
 
     print(X.size(), Y.size())
-    net_dir = f"{save_directory}/{args.task}/train_{int(args.num_training_mean/1_000)}K/{args.task}{args.seed}_mean.pt"
+    net_dir = f"{nets_directory}/{args.task}/train_{int(args.num_training_mean/1_000)}K/{args.task}{args.seed}_mean.pt"
     tmp = torch.load(net_dir)
 
     bounds = Bounds(args.task)
@@ -228,7 +228,7 @@ def main(args):
     end_time = time.time() 
     elapsed_time = end_time - start_time  # Calculate elapsed time
     
-    output_dir = f"{save_directory}/{args.task}/mean_{int(args.num_training_mean/1000)}K_cov_{int(args.num_training_cov/1_000)}K_layer_{args.layer_len}"
+    output_dir = f"{nets_directory}/{args.task}/mean_{int(args.num_training_mean/1000)}K_cov_{int(args.num_training_cov/1_000)}K_layer_{args.layer_len}"
     
     ## Create the directory if it doesn't exist
     if not os.path.exists(output_dir):
@@ -258,7 +258,7 @@ def get_args():
                         help="Number of layers for covnet (default: 128)")
     parser.add_argument("--N_EPOCHS", type=int, default=200, 
                         help="Number of epochs (default: 200)")
-    parser.add_argument("--save_directory", type = str, default = None,
+    parser.add_argument("--nets_directory", type = str, default = None,
                         help = "None: default")
     return parser.parse_args()
 

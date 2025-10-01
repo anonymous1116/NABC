@@ -19,6 +19,11 @@ from NDP_functions import SLCP_summary
 from simul_funcs import UnifSample, param_box
 
 def main(args):
+    if args.save_directory is None:
+        nets_directory = "./nets_NABC"
+    else:
+        nets_directory = args.nets_directory
+    
     seed = args.seed
     torch.set_default_device("cpu")
     
@@ -44,7 +49,7 @@ def main(args):
     simulators = Simulators(args.task)
     bounds = Bounds(args.task)
     
-    net_dir = f"../depot_hyun/hyun/NDP/{args.task}/mean_{int(num_training_mean/1000)}K_cov_{int(num_training_cov/1_000)}K_layer_{args.layer_len}"
+    net_dir = f"{nets_directory}/{args.task}/mean_{int(num_training_mean/1000)}K_cov_{int(num_training_cov/1_000)}K_layer_{args.layer_len}"
 
     assert os.path.exists(net_dir), f"Model directory {net_dir} does not exist"
 
@@ -218,10 +223,12 @@ def get_args():
                         help="layer length of covariance NN (default: 256)")
     parser.add_argument("--tol", type=float, default=1e-4,
                     help="Tolerance value for ABC (any positive float, default: 1e-4 but less than 1e-2)")
+    parser.add_argument("--nets_directory", type = str, default = None,
+                        help = "None: default")
     
     return parser.parse_args()
 
-#python benchmark/benchmark_calibrating.py --x0_ind 1 seed 1 --L 1000000 --task my_twomoons --num_training_mean 10000 --num_training_cov 20000 layer_len 256 tol 1e-3
+#python benchmark/benchmark_calibrating.py --x0_ind 1 --seed 1 --L 1000000 --task my_twomoons --num_training_mean 10000 --num_training_cov 20000 --layer_len 256 --tol 1e-3
 
 
 if __name__ == "__main__":
