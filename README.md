@@ -1,7 +1,6 @@
 # NABC: Neural Amortized Bayesian Computation (NABC)
 
-This repository reproduces **"Neural Amortized Bayesian Computation (NABC)"**,  
-a framework that combines three key components:
+This repository reproduces **"Neural Amortized Bayesian Computation (NABC)"**, a framework that combines three key components:
 
 1. **Learning conditional mean function**  
 2. **Learning conditional variance function**  
