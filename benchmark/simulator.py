@@ -9,13 +9,13 @@ import numpy as np
 # Optional: you can use this from torch.distributions if available
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 
-from NDP_functions import SLCP_summary, SLCP_summary_transform, SLCP_summary_transform2, cont_table_transform
+from NDP_functions import SLCP_summary_transform2
 
 def Bounds(task_name: str):
     task_name = task_name.lower()
     if task_name == "bernoulli_glm":
         return None
-    elif task_name in ["slcp", "slcp_summary", "slcp2_summary", "slcp3", "slcp3_summary", "my_slcp", "my_slcp2","my_slcp4", "slcp_summary_transform", "slcp_summary_transform2"]:
+    elif task_name in ["slcp_summary_transform2"]:
         return [[-3,3]] * 5
     elif task_name in ["mog_2"]:
         return [[-10, 10]] * 2
@@ -25,11 +25,7 @@ def Bounds(task_name: str):
         return [[-10, 10]] * 10
     elif task_name in ["my_twomoons"]:
         return [[-5, 5]] * 2
-    elif task_name in ["my_slcp3"]:
-        return [[-5, 5]] * 5
-    elif task_name in ["ou"]:
-        return [[1, 5], [1, 2.5], [0.5, 2.0]]
-    elif task_name in ["cont_table", "cont_table_dp", "cont_table_dp2", "cont_table_dp_transform", "cont_full", "cont_full2", "cont_full3"]:
+    elif task_name in ["cont_full", "cont_full2", "cont_full3"]:
         return [[0,1]] * 3
     else:
         raise ValueError(f"Unknown task name for bounds: {task_name}")
@@ -42,7 +38,7 @@ def Priors(task_name: str):
         precision_diag = 0.5 * torch.ones(dim)
         precision_matrix = torch.diag(precision_diag)
         return MultivariateNormal(loc=loc, precision_matrix=precision_matrix)
-    elif task_name in ["slcp", "slcp_summary", "slcp2_summary", "slcp3", "slcp3_summary", "my_slcp", "my_slcp2", "my_slcp4", "slcp_summary_transform", "slcp_summary_transform2"]:
+    elif task_name in ["slcp_summary_transform2"]:
         return BoxUniform(low=-3 * torch.ones(5), high=3 * torch.ones(5))
     elif task_name in ["mog_2"]:
         return BoxUniform(low = -10*torch.ones(2), high = 10*torch.ones(2))
@@ -52,11 +48,7 @@ def Priors(task_name: str):
         return BoxUniform(low = -10*torch.ones(10), high = 10*torch.ones(10))
     elif task_name in ["my_twomoons"]:
         return BoxUniform(low = -5*torch.ones(2), high = 5*torch.ones(2))
-    elif task_name in ["my_slcp3"]:
-        return BoxUniform(low = -5*torch.ones(5), high = 5*torch.ones(5))
-    elif task_name in ["ou"]:
-        return BoxUniform(low = torch.tensor([1.0, 1.0, 0.5]), high = torch.tensor([5.0, 2.5, 2.0]))
-    elif task_name in ["cont_table", "cont_table_dp", "cont_table_dp2", "cont_table_dp_transform", "cont_full", "cont_full2", "cont_full3"]:
+    elif task_name in ["cont_full", "cont_full2", "cont_full3"]:
         return Dirichlet(torch.tensor([1.0, 1.0, 1.0, 1.0]))
     else:
         raise ValueError(f"Unknown task name for prior: {task_name}")
@@ -254,61 +246,6 @@ def simulator_my_twomoons(theta):
 
     return torch.stack([x, y], dim=1).to("cpu")
     
-def simulator_OU(theta: torch.Tensor, n = 500, delta = 1/12, batch_size=1_000_000):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    
-    L_OU = theta.size(0)
-    time_OU = torch.linspace(0, n * delta, n + 1)  # (n+1) time steps
-
-    mu_OU, theta_OU, sigma2_OU = theta[:, 0], theta[:, 1], theta[:, 2]
-
-    # Initialize an empty list to store CPU results
-    path_OU_list = []
-
-    # Process in batches to avoid memory overload
-    for start in range(0, L_OU, batch_size):
-        end = min(start + batch_size, L_OU)
-        
-        # Process batch
-        mu_batch = mu_OU[start:end].to(device)
-        theta_batch = theta_OU[start:end].to(device)
-        sigma2_batch = sigma2_OU[start:end].to(device)
-
-        # Compute standard deviation for initial state
-        std_init = torch.sqrt(sigma2_batch / (2 * mu_batch))
-
-        # Initialize batch paths (Allocate **directly on CPU**)
-        path_batch = torch.empty((end - start, n + 1), dtype=torch.float32, device="cpu")
-
-        # Initialize first value of the path
-        z0 = torch.normal(theta_batch, std_init)
-        path_batch[:, 0] = z0.cpu()  # Store on CPU
-        
-        del std_init  # Free GPU memory
-        torch.cuda.empty_cache()
-
-        # Compute time step difference once
-        del_L = time_OU[1] - time_OU[0]
-        exp_neg_mu_del = torch.exp(-mu_batch * del_L)
-        sqrt_term = torch.sqrt(sigma2_batch / (2 * mu_batch) * (1 - exp_neg_mu_del**2))
-        # Compute the rest of the path
-        for l in range(1, n + 1):
-            OU_mean = z0 * exp_neg_mu_del + theta_batch * (1 - exp_neg_mu_del)
-            z0 = torch.normal(OU_mean, sqrt_term)  # Update recursively
-            
-            # Store result **directly** in preallocated CPU tensor
-            path_batch[:, l] = z0.cpu()
-
-        # Store batch results
-        path_OU_list.append(path_batch)
-
-        # Free GPU memory
-        del mu_batch, theta_batch, sigma2_batch, exp_neg_mu_del, sqrt_term, z0, path_batch
-        torch.cuda.empty_cache()
-        
-    # Concatenate all batches on CPU
-    return torch.row_stack(path_OU_list)
-    
 def simulator_cont_table(theta: torch.Tensor, n = 400, batch_size = 1_000_000):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     N = theta.size(0)
@@ -397,31 +334,8 @@ def Simulators(task_name: str):
     if task_name == "bernoulli_glm":
         return simulator_bernoulli
     
-    elif task_name in ["slcp", "slcp3"]:
-        return simulator_slcp3
-    
     elif task_name in ["my_twomoons"]:
         return simulator_my_twomoons
-    
-    elif task_name in ["slcp_summary", "slcp2_summary"]:
-        task = sbibm.get_task("slcp")
-        simulator = task.get_simulator()
-        def summary_generator(theta):
-            x = simulator(theta)  # [N, 8]
-            return SLCP_summary(x)  # [N, 5]
-        return summary_generator
-    
-    elif task_name in ["slcp3_summary", "my_slcp", "my_slcp2", "my_slcp3", "my_slcp4"]:
-        def summary_generator(theta):
-            x = simulator_slcp3(theta)  # [N, 8]
-            return SLCP_summary(x)  # [N, 5]
-        return summary_generator
-    
-    elif task_name in ["slcp_summary_transform"]:
-        def summary_generator(theta):
-            x = simulator_slcp3(theta)  # [N, 8]
-            return SLCP_summary_transform(x)  # [N, 5]
-        return summary_generator
     
     elif task_name in ["slcp_summary_transform2"]:
         def summary_generator(theta):
@@ -435,22 +349,6 @@ def Simulators(task_name: str):
         return simulator_Lapl_5
     elif task_name in ["lapl_10"]:
         return simulator_Lapl_10
-    
-    elif task_name in ["ou"]:
-        def OU_generator(theta):
-            return simulator_OU(theta, n = 2000, delta = 1/12)
-        return OU_generator
-
-    elif task_name in ["cont_table"]:
-        return simulator_cont_table
-    elif task_name in ["cont_table_dp"]:
-        def cont_table_dp_generator(theta):
-            return simulator_rr_cont_table(theta, p = 0.8)
-        return cont_table_dp_generator
-    elif task_name in ["cont_table_dp2"]:
-        def cont_table_dp_generator(theta):
-            return simulator_rr_cont_table(theta, p = 0.6)
-        return cont_table_dp_generator
     
     elif task_name in ["cont_full"]:
         def cont_table_dp_generator(theta):
@@ -466,12 +364,6 @@ def Simulators(task_name: str):
         def cont_full3_generator(theta):
             return simulator_cont_table(theta, n = 4526, batch_size = 100_000)
         return cont_full3_generator
-
-    elif task_name in ["cont_table_dp_transform"]:
-        def cont_table_dp_generator(theta):
-            return cont_table_transform(simulator_rr_cont_table(theta, p = 0.8))
-        return cont_table_dp_generator
-    
 
     else:
         raise ValueError(f"Unknown task name for simulator: {task_name}")
