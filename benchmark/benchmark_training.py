@@ -12,7 +12,7 @@ import subprocess
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + '/../')
 from module import FL_Net, FL_Net_bounded
 import time
-from NDP import NABC_train
+from NABC import NABC_train
 from simulator import Simulators, Priors, Bounds
 # Set the default device based on availability
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
