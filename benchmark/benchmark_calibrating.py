@@ -61,7 +61,6 @@ def main(args):
     Y_cal = priors.sample((1_000_000,))
     X_cal = simulators(Y_cal)
 
-
     # Learning hyperparameters
     D_in, D_out, Hs = X_cal.size(1), Y_cal.size(1), args.layer
     if bounds is None:
