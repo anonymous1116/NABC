@@ -34,7 +34,7 @@ def main(args):
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    if args.task in ["slcp", "slcp_summary", "slcp2_summary", "slcp3_summary", "slcp3", "my_slcp2", "my_slcp3", "slcp_summary_transform", "slcp_summary_transform2"]:
+    if args.task in ["slcp_summary_transform2"]:
         sbi_task = sbibm.get_task("slcp")  # See sbibm.get_available_tasks() for all tasks
     elif args.task in ["bernoulli_glm"]:    
         sbi_task = sbibm.get_task(args.task)  # See sbibm.get_available_tasks() for all tasks
@@ -43,12 +43,8 @@ def main(args):
     simulators = Simulators(args.task)
     bounds = Bounds(args.task)
     
-    if args.task == "slcp2_summary":
-        net_dir = f"../depot_hyun/hyun/NDP/slcp_summary/mean_{int(num_training_mean/1000)}K_cov_{int(num_training_cov/1_000)}K_layer_{args.layer_len}"
-    elif args.task == "my_slcp2":
-        net_dir = f"../depot_hyun/hyun/NDP/my_slcp/mean_{int(num_training_mean/1000)}K_cov_{int(num_training_cov/1_000)}K_layer_{args.layer_len}"
-    else:
-        net_dir = f"../depot_hyun/hyun/NDP/{args.task}_exp/mean_{int(num_training_mean/1000)}K_cov_{int(num_training_cov/1_000)}K_layer_{args.layer_len}"
+    net_dir = f"../depot_hyun/hyun/NDP/{args.task}_exp/mean_{int(num_training_mean/1000)}K_cov_{int(num_training_cov/1_000)}K_layer_{args.layer_len}"
+
     assert os.path.exists(net_dir), f"Model directory {net_dir} does not exist"
 
     tmp1 = torch.load(f"{net_dir}/best_model_mean_state_{seed}.pt")
@@ -60,10 +56,6 @@ def main(args):
     Y_cal = priors.sample((1_000_000,))
     X_cal = simulators(Y_cal)
 
-    if args.task == "cont_table":
-        X_cal = torch.clone(X_cal[:,:3])
-        Y_cal = torch.clone(Y_cal[:,:3])
-        
 
     # Learning hyperparameters
     D_in, D_out, Hs = X_cal.size(1), Y_cal.size(1), 256
@@ -92,49 +84,26 @@ def main(args):
 
     
     start_time = time.time()
-    if args.task in ["slcp", "slcp_summary", "slcp2_summary", "slcp3_summary", "slcp3", "bernoulli_glm", "my_slcp2", "my_slcp3", "slcp_summary_transform", "slcp_summary_transform2"]:
+    if args.task in ["bernoulli_glm"]:
         s_dp_tmp = sbi_task.get_observation(num_observation = args.x0_ind)
-
-
-    if args.task in ["slcp_summary", "my_slcp2", "my_slcp3"]:
-        s_dp_tmp = SLCP_summary(s_dp_tmp)
-    elif args.task in ["slcp_summary_transform"]:
-        s_dp_tmp = SLCP_summary_transform(s_dp_tmp)
     elif args.task in ["slcp_summary_transform2"]:
+        s_dp_tmp = sbi_task.get_observation(num_observation = args.x0_ind)
         s_dp_tmp = SLCP_summary_transform2(s_dp_tmp)
-    
-    elif args.task == "slcp2_summary":
-        tmp = torch.load("/home/hyun18/depot_hyun/NeuralABC_R/slcp2/slcp2_x0_list.pt")
-        s_dp_tmp = torch.tensor(tmp[args.x0_ind -1], dtype = torch.float32)
-        s_dp_tmp = SLCP_summary(s_dp_tmp)
-    elif args.task == "slcp3_summary":
-        tmp = torch.load("/home/hyun18/depot_hyun/NeuralABC_R/slcp2/slcp3_x0_list.pt")
-        s_dp_tmp = torch.tensor(tmp[args.x0_ind -1], dtype = torch.float32)
-        s_dp_tmp = SLCP_summary(s_dp_tmp)
-    elif args.task == "slcp3":
-        tmp = torch.load("/home/hyun18/depot_hyun/NeuralABC_R/slcp2/slcp3_x0_list.pt")
-        s_dp_tmp = torch.tensor(tmp[args.x0_ind -1], dtype = torch.float32)
     elif args.task == "MoG_5":
         tmp = torch.load("../depot_hyun/NeuralABC_R/MoG_5/MoG_x0.pt")
         s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
     elif args.task in ["MoG_10", "Lapl_10", "MoG_2"]:
         tmp = torch.load(f"../depot_hyun/NeuralABC_R/{args.task}/{args.task}_x0.pt")
         s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
-    elif args.task in ["my_slcp", "my_slcp4"]:
-        tmp = torch.load(f"../depot_hyun/NeuralABC_R/{args.task}/{args.task}_x0.pt")
-        s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
-        s_dp_tmp = torch.reshape(s_dp_tmp, (1,8))
-        s_dp_tmp = SLCP_summary(s_dp_tmp)
     elif args.task == "Lapl_5":
         tmp = torch.load("/home/hyun18/NeuralABC/seeds/Lapl_x0.pt")
         s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
     elif args.task == "my_twomoons":
         tmp = torch.load("/home/hyun18/NeuralABC/seeds/my_twomoons2.pt")
         s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
-    elif args.task == "cond_table":
-        tmp = torch.load(f"../depot_hyun/NeuralABC_R/{args.task}/{args.task}_x0.pt")
-        s_dp_tmp = torch.tensor(tmp.numpy().tolist()[args.x0_ind -1], dtype = torch.float32)
-        s_dp_tmp = s_dp_tmp[:3]
+    
+    
+    
     print(s_dp_tmp)
     if s_dp_tmp.ndim == 1:
         s_dp_tmp = torch.reshape(s_dp_tmp, (1,s_dp_tmp.size(0)))
@@ -189,40 +158,14 @@ def main(args):
 
     print("X_abc size", X_abc.size())
 
-    if args.task in ["slcp", "slcp_summary"]:
-        post_sample = sbi_task.get_reference_posterior_samples(num_observation=args.x0_ind)
-    elif args.task == "slcp2_summary":
-        post_sample = torch.load(f"../depot_hyun/NeuralABC_R/slcp2/post_sample_x0_{args.x0_ind}.pt")
-        num_rows = post_sample.shape[0]
-        indices = torch.randperm(num_rows)[:10000]
-        post_sample = torch.tensor(post_sample[indices,:], dtype = torch.float32)
-    elif args.task in ["slcp3_summary", "slcp3"]:
-        post_sample = torch.load(f"../depot_hyun/NeuralABC_R/slcp2/slcp3/post_sample_x0_{args.x0_ind}.pt")
-        num_rows = post_sample.shape[0]
-        indices = torch.randperm(num_rows)[:10000]
-        post_sample = torch.tensor(post_sample[indices,:], dtype = torch.float32)
-    elif args.task in ["bernoulli_glm", "MoG_5", "Lapl_5", "MoG_10", "Lapl_10", "MoG_2"]:    
+    if args.task in ["bernoulli_glm", "MoG_5", "Lapl_5", "MoG_10", "Lapl_10", "MoG_2"]:    
         post_sample = torch.load(f"../depot_hyun/NeuralABC_R/{args.task}/post_{args.x0_ind}.pt")
-    elif args.task in ["my_slcp", "my_slcp4"]:    
-        post_sample = torch.load(f"../depot_hyun/NeuralABC_R/{args.task}/post_sample_x0_{args.x0_ind}.pt")
-        if post_sample.size(0) >12000:
-            burn_in = int(post_sample.size(0) * 0.2)
-            sam_ind = np.random.choice(np.arange(burn_in, post_sample.size(0)), 10_000, replace = False)
-            post_sample = post_sample[sam_ind,:]
-    elif args.task in ["my_slcp2", "slcp_summary_transform", "slcp_summary_transform2"]:    
+    elif args.task in ["slcp_summary_transform2"]:    
         post_sample = torch.load(f"../depot_hyun/NeuralABC_R/slcp_benchmark/benchmark_post_sample_x0_{args.x0_ind}.pt")
         if post_sample.size(0) >12000:
             burn_in = int(post_sample.size(0) * 0.2)
             sam_ind = np.random.choice(np.arange(burn_in, post_sample.size(0)), 10_000, replace = False)
             post_sample = post_sample[sam_ind,:]
-    
-    elif args.task in ["my_slcp3"]:    
-        post_sample = torch.load(f"../depot_hyun/NeuralABC_R/slcp_benchmark_extendprior/post_sample_x0_{args.x0_ind}.pt")
-        if post_sample.size(0) >12000:
-            burn_in = int(post_sample.size(0) * 0.2)
-            sam_ind = np.random.choice(np.arange(burn_in, post_sample.size(0)), 10_000, replace = False)
-            post_sample = post_sample[sam_ind,:]
-    
     
     elif args.task in ["my_twomoons"]:    
         post_sample = torch.load(f"../depot_hyun/NeuralABC_R/my_twomoons2/post_{args.x0_ind}.pt")
@@ -247,7 +190,7 @@ def main(args):
     print(sci_str)  # Output: '1e-02'
     
 
-    output_dir = f"./NABC_results/{args.task}_exp_withcov/mean_{int(num_training_mean/1_000)}K_cov_{int(num_training_cov/1_000)}K_resample/amor_{int(args.L/1_000_000)}M_eta{sci_str}"
+    output_dir = f"./NABC_results/{args.task}/mean_{int(num_training_mean/1_000)}K_cov_{int(num_training_cov/1_000)}K_resample/amor_{int(args.L/1_000_000)}M_eta{sci_str}"
     ## Create the directory if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)

@@ -105,7 +105,7 @@ def SLCP_summary(X):
 
 def fisher_z(x, eps=1e-6):
     x = torch.clamp(x, -1+eps, 1-eps)        # or: x = x*(1-eps)
-    z = 0.5 * torch.log((1 + x) / (1 - x))   # = atanh(x)
+    z = 0.5 * torch.log((1 + x) / (1 - x))   
     return z
 
 def log1p(x):
@@ -113,40 +113,6 @@ def log1p(x):
 
 def log1p2(x):
     return torch.log(.1+x)
-
-
-def SLCP_summary_transform(X):
-    """
-    Compute summary statistics for SLCP data:
-    - Means and standard deviations for even and odd indexed dimensions
-    - Average correlation between even and odd groups
-
-    Args:
-        X: Tensor of shape [N, 8]
-
-    Returns:
-        Tensor of shape [N, 5] containing m0, m1, s0, s1, and rho
-    """
-
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    X = X.to(device)
-    X0 = X[:, [0, 2, 4, 6]]
-    X1 = X[:, [1, 3, 5, 7]]
-    m0 = X0.mean(dim=1, keepdim=True)
-    m1 = X1.mean(dim=1, keepdim=True)
-    s0 = X0.std(dim=1, correction=0, keepdim=True)
-    s1 = X1.std(dim=1, correction=0, keepdim=True)
-    
-    # Compute correlation per sample
-    cov = ((X0 - m0) * (X1 - m1)).mean(dim=1, keepdim=True)
-    rho = cov / (s0 * s1 + 1e-12)
-    rho = torch.clamp(rho, -1.0, 1.0)
-
-    s0 = log1p(s0)
-    s1 = log1p(s1)
-    rho = fisher_z(rho)
-
-    return torch.cat((m0, m1, s0, s1, rho), dim=1).cpu()
 
 def SLCP_summary_transform2(X):
     """
@@ -212,69 +178,6 @@ def ABC_rej2(x0, X_cal, tol, device, case = None):
     return wt1.cpu()
 
 
-
-def synthetic_pairs_MoG(L, dim_out):
-    mu_range = [-10, 10]
-    priors = BoxUniform(low = mu_range[0] * torch.ones(dim_out), high = mu_range[1] * torch.ones(dim_out))
-    thetas = priors.sample((L,))
-    X = MoG(thetas)
-    return X, thetas
-
-
-def synthetic_pairs_Lapl(L, dim_out):
-    #b_list = [0.2, 0.2, 0.2, 0.2, 0.25, 0.25, 0.25, 0.3, 0.3, 0.3]
-    #sigma_list = [0.2, 0.2, 0.3, 0.25, 0.2, 0.3, 0.25, 0.2, 0.3, 0.25]
-    b_list = [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
-    sigma_list = [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
-
-    #L = 3_000_000
-    mu_range = [-5,5]
-
-    mu_priors = []
-    s_dps = []
-
-    for j in range(dim_out):
-        sigma0 = sigma_list[j]
-        b = b_list[j]
-
-        mu_priors_tmp = torch.rand(L) * (mu_range[1]-mu_range[0]) + mu_range[0]
-        s_dps_tmp = Lap_mec(mu_priors_tmp, sigma0, b)
-
-        mu_priors.append(mu_priors_tmp)
-        s_dps.append(s_dps_tmp)
-
-    mu_priors = torch.column_stack(mu_priors)
-    s_dps = torch.column_stack(s_dps)
-    return s_dps, mu_priors
-
-
-
-def true_samples_Lapl(dim_out):
-    post_sample = []
-    for j in range(dim_out):
-        tmp = torch.load(f"/home/hyun18/NDP/jupyter/posterior_samples/posterior_samples_{j}.pt")
-        post_sample.append(tmp)
-    post_sample = torch.column_stack(post_sample)
-    if post_sample.ndim == 1:
-        post_sample = post_sample.unsqueeze(1)
-    return post_sample
-
-
-def true_samples_Lapl2(dim_out):
-    post_sample = []
-    for j in range(dim_out):
-        tmp = torch.load(f"/home/hyun18/NDP/jupyter/posterior_samples/posterior_samples2_{j}.pt")
-        post_sample.append(tmp)
-    post_sample = torch.column_stack(post_sample)
-    if post_sample.ndim == 1:
-        post_sample = post_sample.unsqueeze(1)
-    return post_sample
-
-def s_dp_Lapl(dim_out):
-    s_dp = np.array([1.0]*dim_out)
-    s_dp_tmp = torch.tensor(s_dp, dtype = torch.float32)
-    s_dp_tmp = torch.reshape(s_dp_tmp, (1,dim_out))
-    return s_dp_tmp
 
 
 def learning_checking(X, Y, net, num = 10000, name = None):

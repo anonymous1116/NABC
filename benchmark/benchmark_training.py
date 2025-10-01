@@ -72,52 +72,6 @@ def main(args):
     torch.save(torch.cuda.get_device_name(0), output_dir + "/" + args.task + str(args.seed)+ "_gpu.pt")
 
 
-def create_cov_job_script(args):
-    job_script = f"""#!/bin/bash
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --time=03:59:00
-#SBATCH --account=statdept
-#SBATCH --gpus-per-node=1
-#SBATCH --mem=160G
-#SBATCH --qos=standby
-#SBATCH --partition=a10,a100-80gb
-#SBATCH --output=output_log_cov/output_log_%A_%a.out
-#SBATCH --error=output_log_cov/error_log_%A_%a.txt
-
-# Create the output_log directory if it doesn't exist
-mkdir -p output_log_cov
-
-# Load the required Python environment
-module load conda
-conda activate NABC
-
-# Move to working directory
-cd /home/hyun18/NDP
-
-echo "Running simulation for task {args.task}, num_training: {args.num_training}, N_EPOCHS: {args.N_EPOCHS} seed={args.seed}, layer_len={args.layer_len}..."
-python ./benchmark/benchmark_cov_training_exp.py \
-  --num_training_mean {args.num_training} \
-  --num_training_cov  {args.num_training * 2} \
-  --seed  {args.seed} \
-  --task {args.task} \
-  --N_EPOCHS {args.N_EPOCHS} \
-  --layer_len {args.layer_len}
-"""
-    # Create the directory for SLURM files if it doesn't exist
-    output_dir = f"../NDP/benchmark/cov_learning/{args.task}/J_{int(args.num_training/1000)}K/slurm_files"
-    os.makedirs(output_dir, exist_ok=True)
-
-    job_file_path = os.path.join(output_dir, f"cov_{args.task}_{args.num_training}_{args.seed}_{args.layer_len}_cov_{int(args.num_training*2/1000)}K.sh")
-    with open(job_file_path, 'w') as f:
-        f.write(job_script)
-    print(f"Job script created: {job_file_path}")
-
-    # Submit the job immediately
-    subprocess.run(['sbatch', job_file_path])
-    print(f"Job {job_file_path} submitted.")
-
-
 def get_args():
     parser = argparse.ArgumentParser(description="Run simulation with customizable parameters.")
     parser.add_argument("--num_training", type=int, default=100_000, 
@@ -130,7 +84,6 @@ def get_args():
                         help = "See number (default: 1)")
     parser.add_argument("--layer_len", type = int, default = 256,
                         help = "layer length of FL network (default: 256)")
-    parser.add_argument("--cov", type = int, default = 1, help = "1: training cov, 0: not training cov")
     return parser.parse_args()
 
 
